@@ -1,21 +1,51 @@
 <idea-plugin>
     <id>com.andreafini.claudeplugin</id>
-    <name>Claude Assistant</name>
-    <version>1.0.1</version>
+    <name>IdeaAIPlugin — Claude, ChatGPT, Gemini</name>
+    <version>1.1</version>
     <vendor email="andrea.fini@gmail.com">Andrea Fini</vendor>
 
     <description><![CDATA[
-        Integra le API di Claude (Anthropic), di ChatGPT (OpenAI) e di Gemini (Google) in IntelliJ IDEA.<br>
-        Aggiunge al menu contestuale dell'editor, per ciascun provider, due voci:
+        <b>IdeaAIPlugin</b> integra tre assistenti AI in IntelliJ IDEA — Claude (Anthropic),
+        ChatGPT (OpenAI) e Gemini (Google) — in modo indipendente e simmetrico.<br><br>
+
+        <b>Funzionalità</b> (per ciascun provider, nel menu contestuale dell'editor, click destro):
         <ul>
-            <li><b>Refactor / Migliora</b> — rifattorizza il codice selezionato.</li>
-            <li><b>Genera codice</b> — genera codice a partire da una richiesta e dal file aperto.</li>
+            <li><b>Refactor / Migliora</b> — rifattorizza il codice selezionato secondo le tue indicazioni;
+                il risultato appare in un popup con <i>Copia</i> e <i>Inserisci nel file</i>.</li>
+            <li><b>Genera codice</b> — genera codice a partire da una richiesta, allegando il file aperto come contesto.</li>
+            <li><b>Analizza codice</b> — verifica errori, bug potenziali e possibili miglioramenti.
+                Se c'è del testo selezionato analizza solo quello, altrimenti l'intero file aperto.</li>
         </ul>
-        I pulsanti e la tool window di ciascun provider compaiono solo se la relativa API key
-        è configurata; i tre provider possono essere attivi contemporaneamente.<br>
-        Le API key e i modelli si configurano in Impostazioni &gt; Tools &gt; Claude Assistant,
-        Impostazioni &gt; Tools &gt; ChatGPT Assistant e Impostazioni &gt; Tools &gt; Gemini Assistant.
+
+        Ogni provider ha inoltre una <b>tool window laterale</b> con la cronologia delle conversazioni
+        (raggruppate per thread, con contesto conversazionale opzionale) e una <b>pagina di configurazione</b>.<br><br>
+
+        <b>Visibilità</b>: i pulsanti e la tool window di un provider compaiono <b>solo se la relativa API key è
+        configurata</b>; i tre provider possono essere attivi contemporaneamente.<br><br>
+
+        <b>Modelli AI supportati</b> (selezionabili nelle impostazioni):
+        <ul>
+            <li><b>Claude</b>: <code>claude-opus-4-8</code> (default, il più capace), <code>claude-sonnet-5</code>
+                (equilibrato), <code>claude-haiku-4-5</code> (veloce ed economico).</li>
+            <li><b>ChatGPT</b>: <code>gpt-5</code> (default), <code>gpt-5-mini</code> (economico),
+                <code>gpt-4.1</code>, <code>gpt-4o</code>.</li>
+            <li><b>Gemini</b>: <code>gemini-2.5-pro</code> (default), <code>gemini-2.5-flash</code>
+                (veloce, ideale per refactor semplici), <code>gemini-2.0-flash</code>, <code>gemini-1.5-pro</code>.</li>
+        </ul>
+
+        <b>Configurazione</b>: Impostazioni &gt; Tools &gt; <i>IdeaAIPlugin Claude</i> / <i>IdeaAIPlugin ChatGPT</i> /
+        <i>IdeaAIPlugin Gemini</i>. Le API key sono salvate in modo sicuro nel PasswordSafe dell'IDE.
     ]]></description>
+
+    <change-notes><![CDATA[
+        <b>1.1</b>
+        <ul>
+            <li>Nuovo terzo provider: <b>Gemini</b> (Google), con pulsanti, configurazione e tool window dedicati.</li>
+            <li>Nuovo pulsante <b>Analizza codice</b> per tutti i provider (selezione o intero file).</li>
+            <li>Pagine di configurazione rinominate con prefisso <b>IdeaAIPlugin</b> per raggrupparle in Tools.</li>
+            <li>Icone dedicate per menu, azioni e tool window.</li>
+        </ul>
+    ]]></change-notes>
 
     <idea-version since-build="212"/>
 
@@ -29,10 +59,11 @@
                 parentId="tools"
                 instance="com.andreafini.claudeplugin.settings.ClaudeConfigurable"
                 id="com.andreafini.claudeplugin.settings.ClaudeConfigurable"
-                displayName="Claude Assistant"/>
+                displayName="IdeaAIPlugin Claude"/>
         <notificationGroup id="Claude Assistant" displayType="BALLOON"/>
         <toolWindow id="Claude"
                     anchor="right"
+                    icon="/icons/claude.svg"
                     factoryClass="com.andreafini.claudeplugin.toolwindow.ClaudeToolWindowFactory"/>
 
         <!-- ChatGPT (OpenAI) -->
@@ -42,10 +73,11 @@
                 parentId="tools"
                 instance="com.andreafini.claudeplugin.settings.ChatGptConfigurable"
                 id="com.andreafini.claudeplugin.settings.ChatGptConfigurable"
-                displayName="ChatGPT Assistant"/>
+                displayName="IdeaAIPlugin ChatGPT"/>
         <notificationGroup id="ChatGPT Assistant" displayType="BALLOON"/>
         <toolWindow id="ChatGPT"
                     anchor="right"
+                    icon="/icons/chatgpt.svg"
                     factoryClass="com.andreafini.claudeplugin.toolwindow.ChatGptToolWindowFactory"/>
 
         <!-- Gemini (Google) -->
@@ -55,46 +87,68 @@
                 parentId="tools"
                 instance="com.andreafini.claudeplugin.settings.GeminiConfigurable"
                 id="com.andreafini.claudeplugin.settings.GeminiConfigurable"
-                displayName="Gemini Assistant"/>
+                displayName="IdeaAIPlugin Gemini"/>
         <notificationGroup id="Gemini Assistant" displayType="BALLOON"/>
         <toolWindow id="Gemini"
                     anchor="right"
+                    icon="/icons/gemini.svg"
                     factoryClass="com.andreafini.claudeplugin.toolwindow.GeminiToolWindowFactory"/>
     </extensions>
 
     <actions>
-        <group id="ClaudePlugin.EditorGroup" text="Claude" popup="true">
+        <group id="ClaudePlugin.EditorGroup" text="Claude" popup="true" icon="/icons/claude.svg">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <action id="ClaudePlugin.Refactor"
                     class="com.andreafini.claudeplugin.action.RefactorAction"
                     text="Claude: Refactor / Migliora"
+                    icon="AllIcons.Actions.RefactoringBulb"
                     description="Rifattorizza il codice selezionato con Claude"/>
             <action id="ClaudePlugin.Generate"
                     class="com.andreafini.claudeplugin.action.GenerateCodeAction"
                     text="Claude: Genera codice"
+                    icon="AllIcons.General.Add"
                     description="Genera codice con Claude a partire da una richiesta e dal file aperto"/>
+            <action id="ClaudePlugin.Analyze"
+                    class="com.andreafini.claudeplugin.action.AnalyzeCodeAction"
+                    text="Claude: Analizza codice"
+                    icon="AllIcons.General.InspectionsEye"
+                    description="Analizza con Claude il codice selezionato (o l'intero file) cercando errori, bug e miglioramenti"/>
         </group>
-        <group id="ChatGptPlugin.EditorGroup" text="ChatGPT" popup="true">
+        <group id="ChatGptPlugin.EditorGroup" text="ChatGPT" popup="true" icon="/icons/chatgpt.svg">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <action id="ChatGptPlugin.Refactor"
                     class="com.andreafini.claudeplugin.action.ChatGptRefactorAction"
                     text="ChatGPT: Refactor / Migliora"
+                    icon="AllIcons.Actions.RefactoringBulb"
                     description="Rifattorizza il codice selezionato con ChatGPT"/>
             <action id="ChatGptPlugin.Generate"
                     class="com.andreafini.claudeplugin.action.ChatGptGenerateCodeAction"
                     text="ChatGPT: Genera codice"
+                    icon="AllIcons.General.Add"
                     description="Genera codice con ChatGPT a partire da una richiesta e dal file aperto"/>
+            <action id="ChatGptPlugin.Analyze"
+                    class="com.andreafini.claudeplugin.action.ChatGptAnalyzeCodeAction"
+                    text="ChatGPT: Analizza codice"
+                    icon="AllIcons.General.InspectionsEye"
+                    description="Analizza con ChatGPT il codice selezionato (o l'intero file) cercando errori, bug e miglioramenti"/>
         </group>
-        <group id="GeminiPlugin.EditorGroup" text="Gemini" popup="true">
+        <group id="GeminiPlugin.EditorGroup" text="Gemini" popup="true" icon="/icons/gemini.svg">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
             <action id="GeminiPlugin.Refactor"
                     class="com.andreafini.claudeplugin.action.GeminiRefactorAction"
                     text="Gemini: Refactor / Migliora"
+                    icon="AllIcons.Actions.RefactoringBulb"
                     description="Rifattorizza il codice selezionato con Gemini"/>
             <action id="GeminiPlugin.Generate"
                     class="com.andreafini.claudeplugin.action.GeminiGenerateCodeAction"
                     text="Gemini: Genera codice"
+                    icon="AllIcons.General.Add"
                     description="Genera codice con Gemini a partire da una richiesta e dal file aperto"/>
+            <action id="GeminiPlugin.Analyze"
+                    class="com.andreafini.claudeplugin.action.GeminiAnalyzeCodeAction"
+                    text="Gemini: Analizza codice"
+                    icon="AllIcons.General.InspectionsEye"
+                    description="Analizza con Gemini il codice selezionato (o l'intero file) cercando errori, bug e miglioramenti"/>
         </group>
     </actions>
 </idea-plugin>

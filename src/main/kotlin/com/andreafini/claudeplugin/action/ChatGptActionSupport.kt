@@ -32,6 +32,7 @@ object ChatGptActionSupport {
         type: String,
         userRequest: String,
         prompt: String,
+        stripFences: Boolean = true,
     ) {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Interrogazione di ChatGPT…", true) {
             override fun run(indicator: ProgressIndicator) {
@@ -41,7 +42,7 @@ object ChatGptActionSupport {
                     val history = ChatGptHistoryService.getInstance(project)
                     val messages = buildMessages(history, prompt)
                     val raw = ChatGptClient.sendMessages(messages)
-                    val result = stripCodeFences(raw.text)
+                    val result = if (stripFences) stripCodeFences(raw.text) else raw.text.trim()
                     val model = ChatGptSettings.getInstance().model
                     val info = ChatGptPricing.infoLine(model, raw.inputTokens, raw.outputTokens)
 

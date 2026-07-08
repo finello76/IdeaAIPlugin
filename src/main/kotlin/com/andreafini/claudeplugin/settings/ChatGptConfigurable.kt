@@ -15,7 +15,7 @@ class ChatGptConfigurable : Configurable {
     private val modelCombo = ComboBox(ChatGptSettings.AVAILABLE_MODELS.toTypedArray())
     private var panel: JPanel? = null
 
-    override fun getDisplayName(): String = "ChatGPT Assistant"
+    override fun getDisplayName(): String = "IdeaAIPlugin ChatGPT"
 
     override fun createComponent(): JComponent {
         val builtPanel = FormBuilder.createFormBuilder()

@@ -32,6 +32,7 @@ object GeminiActionSupport {
         type: String,
         userRequest: String,
         prompt: String,
+        stripFences: Boolean = true,
     ) {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Interrogazione di Gemini…", true) {
             override fun run(indicator: ProgressIndicator) {
@@ -41,7 +42,7 @@ object GeminiActionSupport {
                     val history = GeminiHistoryService.getInstance(project)
                     val messages = buildMessages(history, prompt)
                     val raw = GeminiClient.sendMessages(messages)
-                    val result = stripCodeFences(raw.text)
+                    val result = if (stripFences) stripCodeFences(raw.text) else raw.text.trim()
                     val model = GeminiSettings.getInstance().model
                     val info = GeminiPricing.infoLine(model, raw.inputTokens, raw.outputTokens)
 

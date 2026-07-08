@@ -15,7 +15,7 @@ class ClaudeConfigurable : Configurable {
     private val modelCombo = ComboBox(ClaudeSettings.AVAILABLE_MODELS.toTypedArray())
     private var panel: JPanel? = null
 
-    override fun getDisplayName(): String = "Claude Assistant"
+    override fun getDisplayName(): String = "IdeaAIPlugin Claude"
 
     override fun createComponent(): JComponent {
         val builtPanel = FormBuilder.createFormBuilder()

@@ -15,7 +15,7 @@ class GeminiConfigurable : Configurable {
     private val modelCombo = ComboBox(GeminiSettings.AVAILABLE_MODELS.toTypedArray())
     private var panel: JPanel? = null
 
-    override fun getDisplayName(): String = "Gemini Assistant"
+    override fun getDisplayName(): String = "IdeaAIPlugin Gemini"
 
     override fun createComponent(): JComponent {
         val builtPanel = FormBuilder.createFormBuilder()

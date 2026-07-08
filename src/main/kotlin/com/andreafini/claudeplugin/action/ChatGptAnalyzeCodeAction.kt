@@ -1,0 +1,44 @@
+package com.andreafini.claudeplugin.action
+
+import com.andreafini.claudeplugin.settings.ChatGptSettings
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.fileEditor.FileDocumentManager
+
+/**
+ * Pulsante 3 (ChatGPT): analizza il codice per individuare errori, bug e possibili
+ * miglioramenti. Se c'è una selezione analizza solo quella, altrimenti l'intero file.
+ */
+class ChatGptAnalyzeCodeAction : AnAction() {
+
+    override fun update(e: AnActionEvent) {
+        e.presentation.isEnabledAndVisible =
+            e.getData(CommonDataKeys.EDITOR) != null &&
+            ChatGptSettings.getInstance().apiKey.isNotBlank()
+    }
+
+    override fun actionPerformed(e: AnActionEvent) {
+        val project = e.project ?: return
+        val editor = e.getData(CommonDataKeys.EDITOR) ?: return
+
+        val document = editor.document
+        val selected = editor.selectionModel.selectedText
+        val scope = if (!selected.isNullOrBlank()) "selezione" else "file"
+        val code = if (!selected.isNullOrBlank()) selected else document.text
+        if (code.isBlank()) {
+            ChatGptActionSupport.notifyError(project, "Non c'è codice da analizzare.")
+            return
+        }
+        val fileName = FileDocumentManager.getInstance().getFile(document)?.name ?: "file"
+
+        val prompt = AnalyzePrompt.build(scope, fileName, code)
+        ChatGptActionSupport.runRequest(
+            project, editor, "ChatGPT: Analizza codice",
+            type = "Analizza",
+            userRequest = "Analisi ${if (scope == "selezione") "della selezione" else "del file $fileName"}",
+            prompt = prompt,
+            stripFences = false,
+        )
+    }
+}

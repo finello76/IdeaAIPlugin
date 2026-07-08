@@ -36,6 +36,7 @@ object ClaudeActionSupport {
         type: String,
         userRequest: String,
         prompt: String,
+        stripFences: Boolean = true,
     ) {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Interrogazione di Claude…", true) {
             override fun run(indicator: ProgressIndicator) {
@@ -45,7 +46,7 @@ object ClaudeActionSupport {
                     val history = ClaudeHistoryService.getInstance(project)
                     val messages = buildMessages(history, prompt)
                     val raw = ClaudeClient.sendMessages(messages)
-                    val result = stripCodeFences(raw.text)
+                    val result = if (stripFences) stripCodeFences(raw.text) else raw.text.trim()
                     val model = ClaudeSettings.getInstance().model
                     val info = ClaudePricing.infoLine(model, raw.inputTokens, raw.outputTokens)
 
