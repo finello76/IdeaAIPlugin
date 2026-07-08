@@ -1,0 +1,226 @@
+package com.andreafini.claudeplugin.toolwindow
+
+import com.andreafini.claudeplugin.action.ClaudeActionSupport
+import com.andreafini.claudeplugin.api.ClaudePricing
+import com.andreafini.claudeplugin.history.ClaudeHistoryService
+import com.andreafini.claudeplugin.ui.CodeViewer
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.ide.CopyPasteManager
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.Messages
+import com.intellij.ui.ColoredListCellRenderer
+import com.intellij.ui.JBSplitter
+import com.intellij.ui.SimpleTextAttributes
+import com.intellij.ui.components.JBCheckBox
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBList
+import com.intellij.ui.components.JBPanel
+import com.intellij.ui.components.JBScrollPane
+import java.awt.BorderLayout
+import java.awt.FlowLayout
+import java.awt.datatransfer.StringSelection
+import java.awt.event.MouseEvent
+import java.text.SimpleDateFormat
+import java.util.Date
+import javax.swing.DefaultListModel
+import javax.swing.JButton
+import javax.swing.JList
+import javax.swing.JPanel
+import javax.swing.ListSelectionModel
+import javax.swing.SwingConstants
+import javax.swing.ToolTipManager
+
+/** Pannello della tool window: conversazioni + interazioni + dettaglio + azioni. */
+class ClaudeHistoryPanel(private val project: Project) : JBPanel<ClaudeHistoryPanel>(BorderLayout()) {
+
+    private val history = ClaudeHistoryService.getInstance(project)
+    private val listModel = DefaultListModel<ClaudeHistoryService.Interaction>()
+    private val list = object : JBList<ClaudeHistoryService.Interaction>(listModel) {
+        override fun getToolTipText(event: MouseEvent): String? {
+            val index = locationToIndex(event.point)
+            if (index < 0 || index >= model.size) return null
+            return tooltipHtml(model.getElementAt(index))
+        }
+    }
+    private val detailContainer = JPanel(BorderLayout())
+    private val activeLabel = JBLabel()
+    private val timeFormat = SimpleDateFormat("dd/MM HH:mm")
+
+    // Vero mentre reload imposta la selezione a livello di codice: evita che il
+    // listener di selezione cambi la conversazione attiva (e crei ricorsione).
+    private var updatingSelection = false
+
+    private val reloadListener = Runnable {
+        ApplicationManager.getApplication().invokeLater { reload() }
+    }
+
+    init {
+        // Barra superiore: contesto + nuova conversazione + svuota.
+        val top = JPanel(FlowLayout(FlowLayout.LEFT))
+        val contextCheck = JBCheckBox("Contesto conversazionale", history.useContext).apply {
+            toolTipText = "Se attivo, ogni richiesta include le ultime interazioni della " +
+                "conversazione attiva (più token = più costo)."
+            addActionListener { history.useContext = isSelected }
+        }
+        top.add(contextCheck)
+        top.add(JButton("Nuova conversazione").apply {
+            toolTipText = "Inizia un thread pulito: le prossime azioni non useranno il contesto precedente."
+            addActionListener { history.startNewConversation() }
+        })
+        top.add(JButton("Svuota cronologia").apply {
+            addActionListener {
+                val answer = Messages.showYesNoDialog(
+                    project, "Svuotare tutta la cronologia?", "Claude Assistant", null,
+                )
+                if (answer == Messages.YES) history.clear()
+            }
+        })
+
+        val header = JPanel(BorderLayout())
+        header.add(top, BorderLayout.NORTH)
+        header.add(activeLabel, BorderLayout.SOUTH)
+        add(header, BorderLayout.NORTH)
+
+        // Lista a sinistra, raggruppata per conversazione.
+        list.selectionMode = ListSelectionModel.SINGLE_SELECTION
+        list.cellRenderer = object : ColoredListCellRenderer<ClaudeHistoryService.Interaction>() {
+            override fun customizeCellRenderer(
+                list: JList<out ClaudeHistoryService.Interaction>,
+                value: ClaudeHistoryService.Interaction,
+                index: Int,
+                selected: Boolean,
+                hasFocus: Boolean,
+            ) {
+                val active = value.conversationId == history.activeConversationId
+                val idAttr = if (active) SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES
+                else SimpleTextAttributes.GRAYED_ATTRIBUTES
+                val time = timeFormat.format(Date(value.timestampMillis))
+                append("[${shortId(value.conversationId)}] ", idAttr)
+                append("$time · ${value.type}: ${value.request.replace("\n", " ").take(50)}")
+            }
+        }
+        list.addListSelectionListener {
+            if (!it.valueIsAdjusting) {
+                val sel = list.selectedValue
+                if (!updatingSelection && sel != null && sel.conversationId != history.activeConversationId) {
+                    // Selezionare un'interazione rende attiva la sua conversazione.
+                    history.activeConversationId = sel.conversationId
+                }
+                showDetail(sel)
+            }
+        }
+
+        ToolTipManager.sharedInstance().registerComponent(list)
+
+        val splitter = JBSplitter(false, 0.35f)
+        splitter.firstComponent = JBScrollPane(list)
+        splitter.secondComponent = detailContainer
+        add(splitter, BorderLayout.CENTER)
+
+        showDetail(null)
+    }
+
+    override fun addNotify() {
+        super.addNotify()
+        history.addListener(reloadListener)
+        reload()
+    }
+
+    override fun removeNotify() {
+        history.removeListener(reloadListener)
+        super.removeNotify()
+    }
+
+    private fun shortId(conversationId: String): String =
+        if (conversationId.isBlank()) "legacy" else conversationId.take(8)
+
+    /**
+     * Tooltip multiriga (HTML) con la richiesta completa dell'interazione, mandata a capo
+     * su larghezza fissa così non viene troncato quando il testo è lungo.
+     */
+    private fun tooltipHtml(interaction: ClaudeHistoryService.Interaction): String {
+        val text = interaction.request.ifBlank { history.conversationTitle(interaction.conversationId) }
+        val escaped = text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\n", "<br>")
+        return "<html><body style='width:320px'>$escaped</body></html>"
+    }
+
+    private fun reload() {
+        activeLabel.text = " Conversazione attiva: " + shortId(history.activeConversationId) +
+            " — " + history.conversationTitle(history.activeConversationId)
+
+        val selectedId = list.selectedValue?.id
+        listModel.clear()
+        // Raggruppa: conversazioni ordinate per attività più recente, poi per tempo.
+        val items = history.all()
+        val lastTs = items.groupBy { it.conversationId }
+            .mapValues { e -> e.value.maxOfOrNull { it.timestampMillis } ?: 0L }
+        val sorted = items.sortedWith(
+            compareByDescending<ClaudeHistoryService.Interaction> { lastTs[it.conversationId] ?: 0L }
+                .thenByDescending { it.timestampMillis }
+        )
+        sorted.forEach { listModel.addElement(it) }
+
+        var targetIndex = -1
+        if (selectedId != null) {
+            for (i in 0 until listModel.size()) {
+                if (listModel.get(i).id == selectedId) {
+                    targetIndex = i
+                    break
+                }
+            }
+        }
+        updatingSelection = true
+        try {
+            if (targetIndex >= 0) list.selectedIndex = targetIndex else list.clearSelection()
+        } finally {
+            updatingSelection = false
+        }
+        showDetail(list.selectedValue)
+    }
+
+    private fun showDetail(interaction: ClaudeHistoryService.Interaction?) {
+        detailContainer.removeAll()
+        if (interaction == null) {
+            detailContainer.add(
+                JBLabel("Seleziona un'interazione dalla lista.", SwingConstants.CENTER),
+                BorderLayout.CENTER,
+            )
+        } else {
+            val info = ClaudePricing.infoLine(
+                interaction.model, interaction.inputTokens, interaction.outputTokens,
+            )
+            detailContainer.add(JBLabel(" $info"), BorderLayout.NORTH)
+
+            val viewer = CodeViewer.create(project, interaction.response, softWraps = true)
+            detailContainer.add(viewer, BorderLayout.CENTER)
+
+            val buttons = JPanel(FlowLayout(FlowLayout.LEFT))
+            buttons.add(JButton("Copia").apply {
+                addActionListener { copyToClipboard(interaction.response) }
+            })
+            buttons.add(JButton("Inserisci nel file").apply {
+                addActionListener {
+                    copyToClipboard(interaction.response)
+                    val ok = ClaudeActionSupport.insertIntoEditor(project, null, interaction.response)
+                    if (!ok) {
+                        ClaudeActionSupport.notifyError(project, "Nessun file aperto in cui inserire.")
+                    }
+                }
+            })
+            buttons.add(JButton("Elimina").apply {
+                addActionListener { history.remove(interaction.id) }
+            })
+            detailContainer.add(buttons, BorderLayout.SOUTH)
+        }
+        detailContainer.revalidate()
+        detailContainer.repaint()
+    }
+
+    private fun copyToClipboard(text: String) {
+        CopyPasteManager.getInstance().setContents(StringSelection(text))
+    }
+}
