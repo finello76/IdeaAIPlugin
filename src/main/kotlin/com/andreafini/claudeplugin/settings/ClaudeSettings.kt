@@ -59,7 +59,11 @@ class ClaudeSettings : PersistentStateComponent<ClaudeSettings.State> {
 
     companion object {
         const val DEFAULT_MODEL = "claude-opus-4-8"
-        const val DEFAULT_MAX_TOKENS = 4096
+
+        // I modelli recenti usano ragionamento interno (adaptive thinking) i cui token
+        // contano dentro max_tokens: con un budget piccolo (es. 4096) il ragionamento
+        // può consumare tutto e la risposta arriva senza testo visibile.
+        const val DEFAULT_MAX_TOKENS = 16000
         val AVAILABLE_MODELS = listOf("claude-opus-4-8", "claude-sonnet-5", "claude-haiku-4-5")
 
         fun getInstance(): ClaudeSettings =

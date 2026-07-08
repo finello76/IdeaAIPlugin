@@ -60,7 +60,10 @@ class ChatGptSettings : PersistentStateComponent<ChatGptSettings.State> {
 
     companion object {
         const val DEFAULT_MODEL = "gpt-5"
-        const val DEFAULT_MAX_TOKENS = 4096
+
+        // I modelli con ragionamento (es. gpt-5) consumano token di reasoning che
+        // rientrano nel limite: con un budget piccolo la risposta può arrivare vuota.
+        const val DEFAULT_MAX_TOKENS = 16000
         val AVAILABLE_MODELS = listOf("gpt-5", "gpt-5-mini", "gpt-4.1", "gpt-4o")
 
         fun getInstance(): ChatGptSettings =

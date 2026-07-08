@@ -103,6 +103,15 @@ object ChatGptClient {
             if (it.isJsonNull) "" else it.asString
         } ?: ""
         if (text.isBlank()) {
+            val finishReason = choices[0].asJsonObject.get("finish_reason")
+                ?.takeIf { !it.isJsonNull }?.asString
+            if (finishReason == "length") {
+                throw ChatGptException(
+                    "Risposta vuota: raggiunto il limite di token (max=${settings.maxTokens}) " +
+                        "prima di produrre testo (i modelli con ragionamento consumano il budget). " +
+                        "Aumenta 'Max token risposta' in Settings > Tools > IdeaAIPlugin ChatGPT."
+                )
+            }
             throw ChatGptException("ChatGPT non ha restituito testo.")
         }
 

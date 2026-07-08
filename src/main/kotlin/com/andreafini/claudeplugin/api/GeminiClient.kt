@@ -117,6 +117,15 @@ object GeminiClient {
             }
         }
         if (text.isBlank()) {
+            val finishReason = candidates[0].asJsonObject.get("finishReason")
+                ?.takeIf { !it.isJsonNull }?.asString
+            if (finishReason == "MAX_TOKENS") {
+                throw GeminiException(
+                    "Risposta vuota: raggiunto il limite di token (maxOutputTokens=${settings.maxTokens}) " +
+                        "durante il ragionamento. Aumenta 'Max token risposta' in " +
+                        "Settings > Tools > IdeaAIPlugin Gemini."
+                )
+            }
             throw GeminiException("Gemini non ha restituito testo.")
         }
 

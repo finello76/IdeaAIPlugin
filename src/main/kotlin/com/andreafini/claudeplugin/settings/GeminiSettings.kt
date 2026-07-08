@@ -60,7 +60,10 @@ class GeminiSettings : PersistentStateComponent<GeminiSettings.State> {
 
     companion object {
         const val DEFAULT_MODEL = "gemini-2.5-pro"
-        const val DEFAULT_MAX_TOKENS = 4096
+
+        // Gemini 2.5 usa "thinking" attivo di default: i token di ragionamento
+        // rientrano in maxOutputTokens, quindi un budget piccolo può dare risposta vuota.
+        const val DEFAULT_MAX_TOKENS = 16000
         val AVAILABLE_MODELS = listOf("gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-pro")
 
         fun getInstance(): GeminiSettings =

@@ -109,6 +109,14 @@ object ClaudeClient {
         }
         val text = sb.toString()
         if (text.isBlank()) {
+            val stopReason = json.get("stop_reason")?.takeIf { !it.isJsonNull }?.asString
+            if (stopReason == "max_tokens") {
+                throw ClaudeException(
+                    "Risposta vuota: raggiunto il limite di token (max_tokens=${settings.maxTokens}) " +
+                        "prima di produrre testo. Aumenta 'Max token risposta' in " +
+                        "Settings > Tools > IdeaAIPlugin Claude."
+                )
+            }
             throw ClaudeException("Claude non ha restituito testo.")
         }
 
