@@ -4,6 +4,7 @@ import com.andreafini.claudeplugin.action.ClaudeActionSupport
 import com.andreafini.claudeplugin.api.ClaudePricing
 import com.andreafini.claudeplugin.history.ClaudeHistoryService
 import com.andreafini.claudeplugin.ui.CodeViewer
+import com.andreafini.claudeplugin.ui.MarkdownViewer
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.ide.CopyPasteManager
 import com.intellij.openapi.project.Project
@@ -195,7 +196,11 @@ class ClaudeHistoryPanel(private val project: Project) : JBPanel<ClaudeHistoryPa
             )
             detailContainer.add(JBLabel(" $info"), BorderLayout.NORTH)
 
-            val viewer = CodeViewer.create(project, interaction.response, softWraps = true)
+            // Le analisi sono in Markdown (prosa): mostrate formattate; il resto è codice.
+            val viewer = if (interaction.type == "Analizza")
+                MarkdownViewer.create(interaction.response)
+            else
+                CodeViewer.create(project, interaction.response, softWraps = true)
             detailContainer.add(viewer, BorderLayout.CENTER)
 
             val buttons = JPanel(FlowLayout(FlowLayout.LEFT))

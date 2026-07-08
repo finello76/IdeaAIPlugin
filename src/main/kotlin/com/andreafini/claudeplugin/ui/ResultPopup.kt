@@ -28,6 +28,7 @@ class ResultPopup(
     title: String,
     private val resultText: String,
     private val info: String = "",
+    private val markdown: Boolean = false,
 ) : DialogWrapper(project) {
 
     init {
@@ -39,10 +40,15 @@ class ResultPopup(
     }
 
     override fun createCenterPanel(): JComponent {
-        // Determina il linguaggio dal file aperto, per l'evidenziazione della sintassi.
-        val virtualFile = editor?.let { FileDocumentManager.getInstance().getFile(it.document) }
-        val fileType: FileType = virtualFile?.fileType ?: PlainTextFileType.INSTANCE
-        val viewer = CodeViewer.create(project, resultText, fileType)
+        val viewer: JComponent = if (markdown) {
+            // Output in Markdown (es. "Analizza codice"): renderizzato come HTML formattato.
+            MarkdownViewer.create(resultText)
+        } else {
+            // Codice: editor con evidenziazione della sintassi del file aperto.
+            val virtualFile = editor?.let { FileDocumentManager.getInstance().getFile(it.document) }
+            val fileType: FileType = virtualFile?.fileType ?: PlainTextFileType.INSTANCE
+            CodeViewer.create(project, resultText, fileType)
+        }
         viewer.preferredSize = Dimension(720, 460)
 
         val panel = JPanel(BorderLayout())

@@ -45,6 +45,7 @@ class AnalyzeCodeAction : AnAction() {
             userRequest = AnalyzePrompt.historyLabel(dialog.focus, dialog.specificRequest, scope, fileName),
             prompt = prompt,
             stripFences = false,
+            markdown = true,
         )
     }
 }

@@ -33,6 +33,7 @@ object ChatGptActionSupport {
         userRequest: String,
         prompt: String,
         stripFences: Boolean = true,
+        markdown: Boolean = false,
     ) {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Interrogazione di ChatGPT…", true) {
             override fun run(indicator: ProgressIndicator) {
@@ -61,7 +62,7 @@ object ChatGptActionSupport {
                     )
 
                     ApplicationManager.getApplication().invokeLater {
-                        ResultPopup(project, editor, popupTitle, result, info).show()
+                        ResultPopup(project, editor, popupTitle, result, info, markdown).show()
                     }
                 } catch (e: ChatGptException) {
                     notifyError(project, e.message ?: "Errore sconosciuto.")

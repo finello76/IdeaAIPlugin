@@ -37,6 +37,7 @@ object ClaudeActionSupport {
         userRequest: String,
         prompt: String,
         stripFences: Boolean = true,
+        markdown: Boolean = false,
     ) {
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Interrogazione di Claude…", true) {
             override fun run(indicator: ProgressIndicator) {
@@ -65,7 +66,7 @@ object ClaudeActionSupport {
                     )
 
                     ApplicationManager.getApplication().invokeLater {
-                        ResultPopup(project, editor, popupTitle, result, info).show()
+                        ResultPopup(project, editor, popupTitle, result, info, markdown).show()
                     }
                 } catch (e: ClaudeException) {
                     notifyError(project, e.message ?: "Errore sconosciuto.")
