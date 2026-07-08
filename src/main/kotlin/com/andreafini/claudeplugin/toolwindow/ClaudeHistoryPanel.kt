@@ -1,6 +1,7 @@
 package com.andreafini.claudeplugin.toolwindow
 
 import com.andreafini.claudeplugin.action.ClaudeActionSupport
+import com.andreafini.claudeplugin.action.CrossEngine
 import com.andreafini.claudeplugin.api.ClaudePricing
 import com.andreafini.claudeplugin.history.ClaudeHistoryService
 import com.andreafini.claudeplugin.ui.CodeViewer
@@ -26,7 +27,9 @@ import java.util.Date
 import javax.swing.DefaultListModel
 import javax.swing.JButton
 import javax.swing.JList
+import javax.swing.JMenuItem
 import javax.swing.JPanel
+import javax.swing.JPopupMenu
 import javax.swing.ListSelectionModel
 import javax.swing.SwingConstants
 import javax.swing.ToolTipManager
@@ -216,6 +219,7 @@ class ClaudeHistoryPanel(private val project: Project) : JBPanel<ClaudeHistoryPa
                     }
                 }
             })
+            buttons.add(rerunButton(interaction))
             buttons.add(JButton("Elimina").apply {
                 addActionListener { history.remove(interaction.id) }
             })
@@ -223,6 +227,38 @@ class ClaudeHistoryPanel(private val project: Project) : JBPanel<ClaudeHistoryPa
         }
         detailContainer.revalidate()
         detailContainer.repaint()
+    }
+
+    /** Pulsante che rilancia la richiesta selezionata su un altro motore AI configurato. */
+    private fun rerunButton(interaction: ClaudeHistoryService.Interaction): JButton {
+        val button = JButton("Rilancia su ▾")
+        button.toolTipText = "Invia la stessa richiesta a un altro motore AI configurato"
+        button.addActionListener {
+            val targets = CrossEngine.availableTargets(CrossEngine.Engine.CLAUDE)
+            if (targets.isEmpty()) {
+                Messages.showInfoMessage(
+                    project,
+                    "Nessun altro motore configurato. Aggiungi una API key in Settings > Tools.",
+                    "Rilancia su",
+                )
+                return@addActionListener
+            }
+            val promptToSend = interaction.prompt.ifBlank { interaction.request }
+            if (promptToSend.isBlank()) {
+                ClaudeActionSupport.notifyError(project, "Questa interazione non ha un prompt da rilanciare.")
+                return@addActionListener
+            }
+            val menu = JPopupMenu()
+            for (target in targets) {
+                menu.add(JMenuItem(target.displayName).apply {
+                    addActionListener {
+                        CrossEngine.resend(project, target, interaction.type, interaction.request, promptToSend)
+                    }
+                })
+            }
+            menu.show(button, 0, button.height)
+        }
+        return button
     }
 
     private fun copyToClipboard(text: String) {

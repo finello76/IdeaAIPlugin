@@ -63,6 +63,7 @@ object ChatGptActionSupport {
                                 model = model,
                                 inputTokens = raw.inputTokens,
                                 outputTokens = raw.outputTokens,
+                                prompt = prompt,
                             ),
                             conversationId,
                         )

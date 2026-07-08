@@ -30,6 +30,10 @@ class ClaudeHistoryService : PersistentStateComponent<ClaudeHistoryService.State
         var inputTokens: Int = 0
         var outputTokens: Int = 0
 
+        // Prompt completo inviato al modello (con eventuale codice/file): serve per
+        // rilanciare la stessa richiesta su un altro motore senza riscriverla.
+        var prompt: String = ""
+
         constructor(
             id: String,
             timestampMillis: Long,
@@ -39,6 +43,7 @@ class ClaudeHistoryService : PersistentStateComponent<ClaudeHistoryService.State
             model: String,
             inputTokens: Int,
             outputTokens: Int,
+            prompt: String = "",
         ) : this() {
             this.id = id
             this.timestampMillis = timestampMillis
@@ -48,6 +53,7 @@ class ClaudeHistoryService : PersistentStateComponent<ClaudeHistoryService.State
             this.model = model
             this.inputTokens = inputTokens
             this.outputTokens = outputTokens
+            this.prompt = prompt
         }
     }
 

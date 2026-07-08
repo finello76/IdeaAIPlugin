@@ -31,6 +31,10 @@ class ChatGptHistoryService : PersistentStateComponent<ChatGptHistoryService.Sta
         var inputTokens: Int = 0
         var outputTokens: Int = 0
 
+        // Prompt completo inviato al modello (con eventuale codice/file): serve per
+        // rilanciare la stessa richiesta su un altro motore senza riscriverla.
+        var prompt: String = ""
+
         constructor(
             id: String,
             timestampMillis: Long,
@@ -40,6 +44,7 @@ class ChatGptHistoryService : PersistentStateComponent<ChatGptHistoryService.Sta
             model: String,
             inputTokens: Int,
             outputTokens: Int,
+            prompt: String = "",
         ) : this() {
             this.id = id
             this.timestampMillis = timestampMillis
@@ -49,6 +54,7 @@ class ChatGptHistoryService : PersistentStateComponent<ChatGptHistoryService.Sta
             this.model = model
             this.inputTokens = inputTokens
             this.outputTokens = outputTokens
+            this.prompt = prompt
         }
     }
 

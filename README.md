@@ -17,7 +17,10 @@ provider ci sono tre voci nel menu contestuale dell'editor (click destro):
   puntato con gravità e correzioni suggerite (o la risposta diretta alla domanda).
 
 Ogni provider ha inoltre la propria **tool window laterale** con la cronologia delle
-conversazioni (raggruppate per thread, con contesto conversazionale opzionale).
+conversazioni (raggruppate per thread, con contesto conversazionale opzionale). Dal
+dettaglio di un'interazione, il pulsante **Rilancia su** reinvia la stessa richiesta a un
+altro motore configurato, mostrando prima un'**anteprima editabile** del prompt — utile per
+confrontare le risposte dei vari motori senza riscrivere nulla.
 
 ### Visibilità condizionata alle API key
 

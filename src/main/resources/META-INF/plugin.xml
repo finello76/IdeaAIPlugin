@@ -40,6 +40,10 @@
     <change-notes><![CDATA[
         <b>1.2</b>
         <ul>
+            <li><b>Rilancia su</b>: dalla cronologia puoi reinviare la stessa richiesta a un altro
+                motore configurato, con anteprima editabile del prompt prima dell'invio.</li>
+            <li><b>Max token risposta</b> configurabile (default 16000): evita risposte vuote quando
+                il ragionamento del modello consuma il budget.</li>
             <li><b>Analizza codice</b>: scelta del tipo di analisi (completa, bug, miglioramenti,
                 performance, sicurezza) o domanda specifica, con richiesta libera facoltativa.</li>
             <li>Output dell'analisi mostrato come <b>Markdown formattato</b> anziché colorato come codice.</li>
