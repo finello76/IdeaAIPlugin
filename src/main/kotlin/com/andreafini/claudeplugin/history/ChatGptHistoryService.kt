@@ -106,14 +106,24 @@ class ChatGptHistoryService : PersistentStateComponent<ChatGptHistoryService.Sta
     }
 
     /**
-     * Aggiunge un'interazione alla conversazione attiva (creata se assente),
-     * in testa, con un tetto massimo di voci.
+     * Restituisce la conversazione attiva, creandone una se assente. Da chiamare
+     * all'avvio della richiesta per fissare la conversazione di destinazione: così
+     * l'interazione finisce nella conversazione giusta anche se l'utente cambia
+     * conversazione o selezione mentre attende la risposta (chiamata asincrona).
      */
-    fun add(interaction: Interaction) {
+    fun currentConversationId(): String {
         if (myState.activeConversationId.isBlank()) {
             myState.activeConversationId = UUID.randomUUID().toString()
         }
-        interaction.conversationId = myState.activeConversationId
+        return myState.activeConversationId
+    }
+
+    /**
+     * Aggiunge un'interazione alla conversazione [conversationId] (fissata all'avvio
+     * della richiesta), in testa, con un tetto massimo di voci.
+     */
+    fun add(interaction: Interaction, conversationId: String) {
+        interaction.conversationId = conversationId.ifBlank { currentConversationId() }
         myState.interactions.add(0, interaction)
         while (myState.interactions.size > MAX_ENTRIES) {
             myState.interactions.removeAt(myState.interactions.size - 1)

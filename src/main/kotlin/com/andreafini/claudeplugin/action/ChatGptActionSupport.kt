@@ -35,33 +35,37 @@ object ChatGptActionSupport {
         stripFences: Boolean = true,
         markdown: Boolean = false,
     ) {
+        // Snapshot della conversazione al momento dell'avvio (siamo sull'EDT): la
+        // chiamata è asincrona e la conversazione attiva potrebbe cambiare nel frattempo.
+        val history = ChatGptHistoryService.getInstance(project)
+        val conversationId = history.currentConversationId()
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Interrogazione di ChatGPT…", true) {
             override fun run(indicator: ProgressIndicator) {
                 indicator.isIndeterminate = true
                 indicator.text = "Attendo la risposta di ChatGPT…"
                 try {
-                    val history = ChatGptHistoryService.getInstance(project)
-                    val messages = buildMessages(history, prompt)
+                    val messages = buildMessages(history, conversationId, prompt)
                     val raw = ChatGptClient.sendMessages(messages)
                     val result = if (stripFences) stripCodeFences(raw.text) else raw.text.trim()
                     val model = ChatGptSettings.getInstance().model
                     val info = ChatGptPricing.infoLine(model, raw.inputTokens, raw.outputTokens)
 
-                    // Registra l'interazione nella cronologia.
-                    history.add(
-                        ChatGptHistoryService.Interaction(
-                            id = UUID.randomUUID().toString(),
-                            timestampMillis = System.currentTimeMillis(),
-                            type = type,
-                            request = userRequest,
-                            response = result,
-                            model = model,
-                            inputTokens = raw.inputTokens,
-                            outputTokens = raw.outputTokens,
-                        )
-                    )
-
                     ApplicationManager.getApplication().invokeLater {
+                        // Registra l'interazione sull'EDT: la cronologia è letta e
+                        // modificata anche dalla tool window (niente accessi concorrenti).
+                        history.add(
+                            ChatGptHistoryService.Interaction(
+                                id = UUID.randomUUID().toString(),
+                                timestampMillis = System.currentTimeMillis(),
+                                type = type,
+                                request = userRequest,
+                                response = result,
+                                model = model,
+                                inputTokens = raw.inputTokens,
+                                outputTokens = raw.outputTokens,
+                            ),
+                            conversationId,
+                        )
                         ResultPopup(project, editor, popupTitle, result, info, markdown).show()
                     }
                 } catch (e: ChatGptException) {
@@ -77,12 +81,12 @@ object ChatGptActionSupport {
      * Costruisce la lista di messaggi da inviare. Se il contesto conversazionale è attivo,
      * antepone le ultime interazioni come coppie user/assistant.
      */
-    private fun buildMessages(history: ChatGptHistoryService, prompt: String): List<ChatGptMessage> {
+    private fun buildMessages(history: ChatGptHistoryService, conversationId: String, prompt: String): List<ChatGptMessage> {
         if (!history.useContext) {
             return listOf(ChatGptMessage("user", prompt))
         }
         val messages = mutableListOf<ChatGptMessage>()
-        val recent = history.conversation(history.activeConversationId)
+        val recent = history.conversation(conversationId)
             .take(ChatGptHistoryService.CONTEXT_WINDOW)
             .reversed()
         for (it in recent) {

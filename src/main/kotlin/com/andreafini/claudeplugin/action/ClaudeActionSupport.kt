@@ -39,33 +39,37 @@ object ClaudeActionSupport {
         stripFences: Boolean = true,
         markdown: Boolean = false,
     ) {
+        // Snapshot della conversazione al momento dell'avvio (siamo sull'EDT): la
+        // chiamata è asincrona e la conversazione attiva potrebbe cambiare nel frattempo.
+        val history = ClaudeHistoryService.getInstance(project)
+        val conversationId = history.currentConversationId()
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Interrogazione di Claude…", true) {
             override fun run(indicator: ProgressIndicator) {
                 indicator.isIndeterminate = true
                 indicator.text = "Attendo la risposta di Claude…"
                 try {
-                    val history = ClaudeHistoryService.getInstance(project)
-                    val messages = buildMessages(history, prompt)
+                    val messages = buildMessages(history, conversationId, prompt)
                     val raw = ClaudeClient.sendMessages(messages)
                     val result = if (stripFences) stripCodeFences(raw.text) else raw.text.trim()
                     val model = ClaudeSettings.getInstance().model
                     val info = ClaudePricing.infoLine(model, raw.inputTokens, raw.outputTokens)
 
-                    // Registra l'interazione nella cronologia.
-                    history.add(
-                        ClaudeHistoryService.Interaction(
-                            id = UUID.randomUUID().toString(),
-                            timestampMillis = System.currentTimeMillis(),
-                            type = type,
-                            request = userRequest,
-                            response = result,
-                            model = model,
-                            inputTokens = raw.inputTokens,
-                            outputTokens = raw.outputTokens,
-                        )
-                    )
-
                     ApplicationManager.getApplication().invokeLater {
+                        // Registra l'interazione sull'EDT: la cronologia è letta e
+                        // modificata anche dalla tool window (niente accessi concorrenti).
+                        history.add(
+                            ClaudeHistoryService.Interaction(
+                                id = UUID.randomUUID().toString(),
+                                timestampMillis = System.currentTimeMillis(),
+                                type = type,
+                                request = userRequest,
+                                response = result,
+                                model = model,
+                                inputTokens = raw.inputTokens,
+                                outputTokens = raw.outputTokens,
+                            ),
+                            conversationId,
+                        )
                         ResultPopup(project, editor, popupTitle, result, info, markdown).show()
                     }
                 } catch (e: ClaudeException) {
@@ -81,13 +85,13 @@ object ClaudeActionSupport {
      * Costruisce la lista di messaggi da inviare. Se il contesto conversazionale è attivo,
      * antepone le ultime interazioni come coppie user/assistant.
      */
-    private fun buildMessages(history: ClaudeHistoryService, prompt: String): List<ClaudeMessage> {
+    private fun buildMessages(history: ClaudeHistoryService, conversationId: String, prompt: String): List<ClaudeMessage> {
         if (!history.useContext) {
             return listOf(ClaudeMessage("user", prompt))
         }
         val messages = mutableListOf<ClaudeMessage>()
-        // Solo le interazioni della conversazione attiva: prendo le ultime N e le riordino.
-        val recent = history.conversation(history.activeConversationId)
+        // Solo le interazioni della conversazione fissata: prendo le ultime N e le riordino.
+        val recent = history.conversation(conversationId)
             .take(ClaudeHistoryService.CONTEXT_WINDOW)
             .reversed()
         for (it in recent) {
