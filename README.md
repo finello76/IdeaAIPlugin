@@ -11,7 +11,10 @@ provider ci sono tre voci nel menu contestuale dell'editor (click destro):
   il contenuto del file aperto come contesto e mostra il risultato nello stesso popup.
 - **Analizza codice** — verifica il codice cercando errori, bug potenziali e possibili
   miglioramenti. Se c'è una **selezione** analizza solo quella, altrimenti l'**intero
-  file** aperto; la risposta è un elenco puntato con gravità e correzioni suggerite.
+  file** aperto. Un dialog permette di scegliere il **tipo di analisi** (Analisi completa,
+  Bug e correttezza, Miglioramenti/refactoring, Performance, Sicurezza, oppure una
+  **Domanda specifica**) e di aggiungere una richiesta libera; la risposta è un elenco
+  puntato con gravità e correzioni suggerite (o la risposta diretta alla domanda).
 
 Ogni provider ha inoltre la propria **tool window laterale** con la cronologia delle
 conversazioni (raggruppate per thread, con contesto conversazionale opzionale).
