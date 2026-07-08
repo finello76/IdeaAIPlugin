@@ -41,10 +41,17 @@ class ClaudeSettings : PersistentStateComponent<ClaudeSettings.State> {
             myState.maxTokens = value
         }
 
+    // Cache in memoria della API key: la visibilità delle azioni la legge in update(),
+    // chiamato sull'EDT a ogni apertura del menu, e PasswordSafe può essere lento.
+    @Volatile
+    private var cachedApiKey: String? = null
+
     var apiKey: String
-        get() = PasswordSafe.instance.getPassword(credentialAttributes()) ?: ""
+        get() = cachedApiKey
+            ?: (PasswordSafe.instance.getPassword(credentialAttributes()) ?: "").also { cachedApiKey = it }
         set(value) {
             PasswordSafe.instance.setPassword(credentialAttributes(), value.ifBlank { null })
+            cachedApiKey = value.ifBlank { "" }
         }
 
     private fun credentialAttributes(): CredentialAttributes =
