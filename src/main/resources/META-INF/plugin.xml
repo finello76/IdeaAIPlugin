@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.andreafini.claudeplugin</id>
     <name>IdeaAIPlugin — Claude, ChatGPT, Gemini</name>
-    <version>1.1</version>
+    <version>1.2</version>
     <vendor email="andrea.fini@gmail.com">Andrea Fini</vendor>
 
     <description><![CDATA[
@@ -38,6 +38,14 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <b>1.2</b>
+        <ul>
+            <li><b>Analizza codice</b>: scelta del tipo di analisi (completa, bug, miglioramenti,
+                performance, sicurezza) o domanda specifica, con richiesta libera facoltativa.</li>
+            <li>Output dell'analisi mostrato come <b>Markdown formattato</b> anziché colorato come codice.</li>
+            <li>Correzione: la risposta veniva salvata nella conversazione sbagliata se questa
+                cambiava durante l'attesa; la registrazione è ora thread-safe.</li>
+        </ul>
         <b>1.1</b>
         <ul>
             <li>Nuovo terzo provider: <b>Gemini</b> (Google), con pulsanti, configurazione e tool window dedicati.</li>
