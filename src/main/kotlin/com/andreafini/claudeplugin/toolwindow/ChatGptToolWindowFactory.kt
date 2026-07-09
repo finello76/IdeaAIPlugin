@@ -10,12 +10,11 @@ import com.intellij.ui.content.ContentFactory
 class ChatGptToolWindowFactory : ToolWindowFactory {
 
     /**
-     * La tool window compare solo se la API key di OpenAI è configurata.
-     * Valutata all'apertura del progetto: se la key viene aggiunta dopo, riapri il progetto.
+     * Stato iniziale del pulsante laterale all'apertura del progetto: visibile solo se la API
+     * key di OpenAI è configurata. La tool window resta comunque sempre registrata, così
+     * [ToolWindowAvailability] può mostrarla/nasconderla a runtime quando la key cambia,
+     * senza richiedere un riavvio.
      */
-    override fun isApplicable(project: Project): Boolean =
-        ChatGptSettings.getInstance().apiKey.isNotBlank()
-
     override fun shouldBeAvailable(project: Project): Boolean =
         ChatGptSettings.getInstance().apiKey.isNotBlank()
 

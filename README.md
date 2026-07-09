@@ -34,9 +34,9 @@ configurata**:
 I tre provider possono essere **attivi contemporaneamente**: configurando tutte le key
 compaiono tutti e sei i pulsanti e tutte e tre le tool window.
 
-> Nota: le tool window valutano la presenza della key all'apertura del progetto. Se
-> aggiungi una key mentre il progetto è già aperto, riaprilo per far comparire il pannello.
-> I pulsanti nel menu editor, invece, si aggiornano immediatamente.
+> Nota: sia i pulsanti nel menu editor sia la tool window si aggiornano **immediatamente**
+> quando salvi (o rimuovi) la API key nelle impostazioni — non serve riavviare l'IDE né
+> riaprire il progetto.
 
 ## Configurazione
 

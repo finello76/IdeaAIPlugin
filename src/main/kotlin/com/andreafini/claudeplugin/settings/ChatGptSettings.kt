@@ -20,6 +20,10 @@ class ChatGptSettings : PersistentStateComponent<ChatGptSettings.State> {
     data class State(
         var model: String = DEFAULT_MODEL,
         var maxTokens: Int = DEFAULT_MAX_TOKENS,
+        // Copia in chiaro della API key, usata SOLO come fallback quando il PasswordSafe
+        // dell'IDE è in modalità solo-memoria (non sopravvive al riavvio). Resta vuota
+        // quando lo store sicuro è disponibile.
+        var apiKeyFallback: String = "",
     )
 
     private var myState = State()
@@ -48,12 +52,40 @@ class ChatGptSettings : PersistentStateComponent<ChatGptSettings.State> {
     private var cachedApiKey: String? = null
 
     var apiKey: String
-        get() = cachedApiKey
-            ?: (PasswordSafe.instance.getPassword(credentialAttributes()) ?: "").also { cachedApiKey = it }
-        set(value) {
-            PasswordSafe.instance.setPassword(credentialAttributes(), value.ifBlank { null })
-            cachedApiKey = value.ifBlank { "" }
+        get() {
+            cachedApiKey?.let { return it }
+            val safe = PasswordSafe.instance
+            val value = if (safe.isMemoryOnly) {
+                // Store sicuro non persistente su questo IDE: leggi la copia dal config.
+                myState.apiKeyFallback
+            } else {
+                // Store sicuro disponibile. Se è rimasta una key nel fallback (configurata
+                // quando il secure store era disattivato), migrala e ripulisci il config.
+                val secure = safe.getPassword(credentialAttributes()) ?: ""
+                if (secure.isBlank() && myState.apiKeyFallback.isNotBlank()) {
+                    safe.setPassword(credentialAttributes(), myState.apiKeyFallback)
+                    myState.apiKeyFallback.also { myState.apiKeyFallback = "" }
+                } else {
+                    secure
+                }
+            }
+            return value.also { cachedApiKey = it }
         }
+        set(value) {
+            val normalized = value.ifBlank { "" }
+            val safe = PasswordSafe.instance
+            if (safe.isMemoryOnly) {
+                // Nessun keychain persistente: salva in chiaro nel config così sopravvive al riavvio.
+                myState.apiKeyFallback = normalized
+            } else {
+                safe.setPassword(credentialAttributes(), normalized.ifBlank { null })
+                myState.apiKeyFallback = ""
+            }
+            cachedApiKey = normalized
+        }
+
+    /** true se il PasswordSafe dell'IDE non persiste tra i riavvii (fallback in chiaro attivo). */
+    fun isSecureStorageUnavailable(): Boolean = PasswordSafe.instance.isMemoryOnly
 
     private fun credentialAttributes(): CredentialAttributes =
         CredentialAttributes(generateServiceName("ChatGPT Assistant", "OPENAI_API_KEY"))

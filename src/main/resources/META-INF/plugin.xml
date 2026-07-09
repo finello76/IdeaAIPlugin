@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.andreafini.claudeplugin</id>
     <name>IdeaAIPlugin — Claude, ChatGPT, Gemini</name>
-    <version>1.2.1</version>
+    <version>1.2.3</version>
     <vendor email="andrea.fini@gmail.com">Andrea Fini</vendor>
 
     <description><![CDATA[
@@ -38,6 +38,21 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <b>1.2.3</b>
+        <ul>
+            <li>La <b>tool window laterale</b> di un provider compare (o scompare) <b>subito</b>
+                quando salvi o rimuovi la API key nelle impostazioni, senza dover riavviare l'IDE
+                o riaprire il progetto.</li>
+        </ul>
+        <b>1.2.2</b>
+        <ul>
+            <li>Correzione: su alcune installazioni (es. IntelliJ IDEA 2021.1) la API key veniva
+                <b>persa a ogni riavvio</b> e, di conseguenza, la tool window con la cronologia non
+                compariva più. Ora, quando l'archiviazione sicura delle password dell'IDE è
+                disattivata (modalità solo-memoria), la key viene salvata come fallback nel file di
+                configurazione del plugin così da sopravvivere al riavvio; un avviso nella pagina
+                impostazioni lo segnala. Con lo store sicuro attivo il comportamento è invariato.</li>
+        </ul>
         <b>1.2.1</b>
         <ul>
             <li>Compatibilità estesa a <b>IntelliJ IDEA 2021.1</b> (build 211): il plugin

@@ -1,5 +1,6 @@
 package com.andreafini.claudeplugin.settings
 
+import com.andreafini.claudeplugin.toolwindow.ToolWindowAvailability
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.JBIntSpinner
@@ -20,13 +21,20 @@ class ChatGptConfigurable : Configurable {
     override fun getDisplayName(): String = "IdeaAIPlugin ChatGPT"
 
     override fun createComponent(): JComponent {
-        val builtPanel = FormBuilder.createFormBuilder()
+        val builder = FormBuilder.createFormBuilder()
             .addLabeledComponent(JBLabel("API key (OpenAI):"), apiKeyField, 1, false)
             .addLabeledComponent(JBLabel("Modello:"), modelCombo, 1, false)
             .addLabeledComponent(JBLabel("Max token risposta:"), maxTokensSpinner, 1, false)
             .addComponent(JBLabel("Limite di token della risposta (non la finestra di contesto). " +
                 "Se le risposte arrivano vuote o troncate, aumentalo: i modelli con ragionamento " +
                 "consumano parte di questo budget."))
+        if (ChatGptSettings.getInstance().isSecureStorageUnavailable()) {
+            builder.addComponent(JBLabel("<html>⚠ L'archiviazione sicura delle password dell'IDE è " +
+                "disattivata (Settings &gt; Appearance &amp; Behavior &gt; System Settings &gt; Passwords). " +
+                "La API key verrà salvata <b>in chiaro</b> nel file di configurazione del plugin così da " +
+                "sopravvivere al riavvio.</html>"))
+        }
+        val builtPanel = builder
             .addComponentFillVertically(JPanel(), 0)
             .panel
         panel = builtPanel
@@ -46,6 +54,8 @@ class ChatGptConfigurable : Configurable {
         settings.apiKey = String(apiKeyField.password)
         settings.model = modelCombo.selectedItem as? String ?: ChatGptSettings.DEFAULT_MODEL
         settings.maxTokens = maxTokensSpinner.number
+        // Mostra/nasconde subito il pulsante laterale, senza riavviare l'IDE.
+        ToolWindowAvailability.refreshAll()
     }
 
     override fun reset() {
