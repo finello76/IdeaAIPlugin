@@ -3,6 +3,7 @@ package com.andreafini.claudeplugin.toolwindow
 import com.andreafini.claudeplugin.settings.ChatGptSettings
 import com.andreafini.claudeplugin.settings.ClaudeSettings
 import com.andreafini.claudeplugin.settings.GeminiSettings
+import com.andreafini.claudeplugin.settings.OpenRouterSettings
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
@@ -22,6 +23,7 @@ object ToolWindowAvailability {
         "Claude" to { ClaudeSettings.getInstance().apiKey.isNotBlank() },
         "ChatGPT" to { ChatGptSettings.getInstance().apiKey.isNotBlank() },
         "Gemini" to { GeminiSettings.getInstance().apiKey.isNotBlank() },
+        "OpenRouter" to { OpenRouterSettings.getInstance().apiKey.isNotBlank() },
     )
 
     /** Riallinea le tool window in tutti i progetti aperti (sull'EDT). */

@@ -3,6 +3,7 @@ package com.andreafini.claudeplugin.action
 import com.andreafini.claudeplugin.settings.ChatGptSettings
 import com.andreafini.claudeplugin.settings.ClaudeSettings
 import com.andreafini.claudeplugin.settings.GeminiSettings
+import com.andreafini.claudeplugin.settings.OpenRouterSettings
 import com.andreafini.claudeplugin.ui.PromptReviewDialog
 import com.intellij.openapi.project.Project
 
@@ -16,13 +17,15 @@ object CrossEngine {
     enum class Engine(val displayName: String) {
         CLAUDE("Claude"),
         CHATGPT("ChatGPT"),
-        GEMINI("Gemini");
+        GEMINI("Gemini"),
+        OPENROUTER("OpenRouter");
 
         /** Vero se la API key del provider è configurata. */
         fun hasApiKey(): Boolean = when (this) {
             CLAUDE -> ClaudeSettings.getInstance().apiKey.isNotBlank()
             CHATGPT -> ChatGptSettings.getInstance().apiKey.isNotBlank()
             GEMINI -> GeminiSettings.getInstance().apiKey.isNotBlank()
+            OPENROUTER -> OpenRouterSettings.getInstance().apiKey.isNotBlank()
         }
     }
 
@@ -52,6 +55,9 @@ object CrossEngine {
                 project, null, title, type, userRequest, finalPrompt, stripFences, markdown,
             )
             Engine.GEMINI -> GeminiActionSupport.runRequest(
+                project, null, title, type, userRequest, finalPrompt, stripFences, markdown,
+            )
+            Engine.OPENROUTER -> OpenRouterActionSupport.runRequest(
                 project, null, title, type, userRequest, finalPrompt, stripFences, markdown,
             )
         }

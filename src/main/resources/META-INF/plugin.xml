@@ -1,12 +1,14 @@
 <idea-plugin>
     <id>com.andreafini.claudeplugin</id>
-    <name>IdeaAIPlugin — Claude, ChatGPT, Gemini</name>
-    <version>1.2.3</version>
+    <name>IdeaAIPlugin — Claude, ChatGPT, Gemini, OpenRouter</name>
+    <version>2.0.0</version>
     <vendor email="andrea.fini@gmail.com">Andrea Fini</vendor>
 
     <description><![CDATA[
-        <b>IdeaAIPlugin</b> integra tre assistenti AI in IntelliJ IDEA — Claude (Anthropic),
-        ChatGPT (OpenAI) e Gemini (Google) — in modo indipendente e simmetrico.<br><br>
+        <b>IdeaAIPlugin</b> integra quattro assistenti AI in IntelliJ IDEA — Claude (Anthropic),
+        ChatGPT (OpenAI), Gemini (Google) e OpenRouter — in modo indipendente e simmetrico.
+        OpenRouter è un aggregatore: con una sola API key dà accesso a centinaia di modelli,
+        molti dei quali <b>gratuiti</b> (id con suffisso <code>:free</code>).<br><br>
 
         <b>Funzionalità</b> (per ciascun provider, nel menu contestuale dell'editor, click destro):
         <ul>
@@ -31,13 +33,27 @@
                 <code>gpt-4.1</code>, <code>gpt-4o</code>.</li>
             <li><b>Gemini</b>: <code>gemini-2.5-pro</code> (default), <code>gemini-2.5-flash</code>
                 (veloce, ideale per refactor semplici), <code>gemini-2.0-flash</code>, <code>gemini-1.5-pro</code>.</li>
+            <li><b>OpenRouter</b>: campo modello <b>libero</b>, con qualsiasi id da
+                <code>openrouter.ai/models</code>. Default gratuito <code>qwen/qwen3-coder:free</code>;
+                i modelli <code>:free</code> non consumano credito.</li>
         </ul>
 
         <b>Configurazione</b>: Impostazioni &gt; Tools &gt; <i>IdeaAIPlugin Claude</i> / <i>IdeaAIPlugin ChatGPT</i> /
-        <i>IdeaAIPlugin Gemini</i>. Le API key sono salvate in modo sicuro nel PasswordSafe dell'IDE.
+        <i>IdeaAIPlugin Gemini</i> / <i>IdeaAIPlugin OpenRouter</i>. Le API key sono salvate in modo sicuro
+        nel PasswordSafe dell'IDE.
     ]]></description>
 
     <change-notes><![CDATA[
+        <b>2.0</b>
+        <ul>
+            <li>Nuovo quarto motore: <b>OpenRouter</b>, aggregatore OpenAI-compatibile. Con una sola
+                API key accedi a <b>centinaia di modelli</b>, molti <b>gratuiti</b> (id con suffisso
+                <code>:free</code>, es. DeepSeek, Qwen Coder, Llama). Pulsanti, configurazione, cronologia
+                e tool window dedicati, come per gli altri provider.</li>
+            <li>Nel motore OpenRouter il <b>modello è un campo libero</b>: puoi incollare qualsiasi id
+                da <code>openrouter.ai/models</code>, oltre ai suggerimenti proposti.</li>
+            <li>Puoi <b>rilanciare</b> una richiesta da/verso OpenRouter come per gli altri motori.</li>
+        </ul>
         <b>1.2.3</b>
         <ul>
             <li>La <b>tool window laterale</b> di un provider compare (o scompare) <b>subito</b>
@@ -84,14 +100,21 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <!-- Nodo padre che raggruppa le pagine dei singoli motori sotto Tools > IdeaAIPlugin. -->
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.andreafini.claudeplugin.settings.IdeaAiPluginConfigurable"
+                id="com.andreafini.claudeplugin.settings.IdeaAiPluginConfigurable"
+                displayName="IdeaAIPlugin"/>
+
         <!-- Claude (Anthropic) -->
         <applicationService serviceImplementation="com.andreafini.claudeplugin.settings.ClaudeSettings"/>
         <projectService serviceImplementation="com.andreafini.claudeplugin.history.ClaudeHistoryService"/>
         <applicationConfigurable
-                parentId="tools"
+                parentId="com.andreafini.claudeplugin.settings.IdeaAiPluginConfigurable"
                 instance="com.andreafini.claudeplugin.settings.ClaudeConfigurable"
                 id="com.andreafini.claudeplugin.settings.ClaudeConfigurable"
-                displayName="IdeaAIPlugin Claude"/>
+                displayName="Claude"/>
         <notificationGroup id="Claude Assistant" displayType="BALLOON"/>
         <toolWindow id="Claude"
                     anchor="right"
@@ -102,10 +125,10 @@
         <applicationService serviceImplementation="com.andreafini.claudeplugin.settings.ChatGptSettings"/>
         <projectService serviceImplementation="com.andreafini.claudeplugin.history.ChatGptHistoryService"/>
         <applicationConfigurable
-                parentId="tools"
+                parentId="com.andreafini.claudeplugin.settings.IdeaAiPluginConfigurable"
                 instance="com.andreafini.claudeplugin.settings.ChatGptConfigurable"
                 id="com.andreafini.claudeplugin.settings.ChatGptConfigurable"
-                displayName="IdeaAIPlugin ChatGPT"/>
+                displayName="ChatGPT"/>
         <notificationGroup id="ChatGPT Assistant" displayType="BALLOON"/>
         <toolWindow id="ChatGPT"
                     anchor="right"
@@ -116,15 +139,29 @@
         <applicationService serviceImplementation="com.andreafini.claudeplugin.settings.GeminiSettings"/>
         <projectService serviceImplementation="com.andreafini.claudeplugin.history.GeminiHistoryService"/>
         <applicationConfigurable
-                parentId="tools"
+                parentId="com.andreafini.claudeplugin.settings.IdeaAiPluginConfigurable"
                 instance="com.andreafini.claudeplugin.settings.GeminiConfigurable"
                 id="com.andreafini.claudeplugin.settings.GeminiConfigurable"
-                displayName="IdeaAIPlugin Gemini"/>
+                displayName="Gemini"/>
         <notificationGroup id="Gemini Assistant" displayType="BALLOON"/>
         <toolWindow id="Gemini"
                     anchor="right"
                     icon="/icons/gemini.svg"
                     factoryClass="com.andreafini.claudeplugin.toolwindow.GeminiToolWindowFactory"/>
+
+        <!-- OpenRouter (aggregatore) -->
+        <applicationService serviceImplementation="com.andreafini.claudeplugin.settings.OpenRouterSettings"/>
+        <projectService serviceImplementation="com.andreafini.claudeplugin.history.OpenRouterHistoryService"/>
+        <applicationConfigurable
+                parentId="com.andreafini.claudeplugin.settings.IdeaAiPluginConfigurable"
+                instance="com.andreafini.claudeplugin.settings.OpenRouterConfigurable"
+                id="com.andreafini.claudeplugin.settings.OpenRouterConfigurable"
+                displayName="OpenRouter"/>
+        <notificationGroup id="OpenRouter Assistant" displayType="BALLOON"/>
+        <toolWindow id="OpenRouter"
+                    anchor="right"
+                    icon="/icons/openrouter.svg"
+                    factoryClass="com.andreafini.claudeplugin.toolwindow.OpenRouterToolWindowFactory"/>
     </extensions>
 
     <actions>
@@ -181,6 +218,24 @@
                     text="Gemini: Analizza codice"
                     icon="AllIcons.General.InspectionsEye"
                     description="Analizza con Gemini il codice selezionato (o l'intero file) cercando errori, bug e miglioramenti"/>
+        </group>
+        <group id="OpenRouterPlugin.EditorGroup" text="OpenRouter" popup="true" icon="/icons/openrouter.svg">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <action id="OpenRouterPlugin.Refactor"
+                    class="com.andreafini.claudeplugin.action.OpenRouterRefactorAction"
+                    text="OpenRouter: Refactor / Migliora"
+                    icon="AllIcons.Actions.RefactoringBulb"
+                    description="Rifattorizza il codice selezionato con OpenRouter"/>
+            <action id="OpenRouterPlugin.Generate"
+                    class="com.andreafini.claudeplugin.action.OpenRouterGenerateCodeAction"
+                    text="OpenRouter: Genera codice"
+                    icon="AllIcons.General.Add"
+                    description="Genera codice con OpenRouter a partire da una richiesta e dal file aperto"/>
+            <action id="OpenRouterPlugin.Analyze"
+                    class="com.andreafini.claudeplugin.action.OpenRouterAnalyzeCodeAction"
+                    text="OpenRouter: Analizza codice"
+                    icon="AllIcons.General.InspectionsEye"
+                    description="Analizza con OpenRouter il codice selezionato (o l'intero file) cercando errori, bug e miglioramenti"/>
         </group>
     </actions>
 </idea-plugin>

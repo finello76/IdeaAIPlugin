@@ -18,7 +18,7 @@ class GeminiConfigurable : Configurable {
     private val maxTokensSpinner = JBIntSpinner(GeminiSettings.DEFAULT_MAX_TOKENS, 256, 64000, 512)
     private var panel: JPanel? = null
 
-    override fun getDisplayName(): String = "IdeaAIPlugin Gemini"
+    override fun getDisplayName(): String = "Gemini"
 
     override fun createComponent(): JComponent {
         val builder = FormBuilder.createFormBuilder()

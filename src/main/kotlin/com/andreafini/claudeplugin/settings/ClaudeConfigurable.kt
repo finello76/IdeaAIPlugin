@@ -18,7 +18,7 @@ class ClaudeConfigurable : Configurable {
     private val maxTokensSpinner = JBIntSpinner(ClaudeSettings.DEFAULT_MAX_TOKENS, 256, 64000, 512)
     private var panel: JPanel? = null
 
-    override fun getDisplayName(): String = "IdeaAIPlugin Claude"
+    override fun getDisplayName(): String = "Claude"
 
     override fun createComponent(): JComponent {
         val builder = FormBuilder.createFormBuilder()
