@@ -5,16 +5,17 @@ plugins {
 }
 
 group = "com.andreafini"
-version = "1.2"
+version = "1.2.1"
 
 repositories {
     mavenCentral()
 }
 
-// Configura il plugin Gradle IntelliJ contro IntelliJ IDEA Community 2021.2.1 (build 212)
+// Compila contro l'IntelliJ IDEA già installato localmente (build 212): usando localPath
+// il plugin Gradle NON scarica alcun SDK. La compatibilità con la 2021.1 è dichiarata da
+// sinceBuild=211 in patchPluginXml, indipendente dalla versione dell'IDE di compilazione.
 intellij {
-    version.set("2021.2.1")
-    type.set("IC")
+    localPath.set("/home/finello/Progetti/intellij_idea")
     plugins.set(listOf())
 }
 
@@ -29,7 +30,7 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("212")
+        sinceBuild.set("211")
         untilBuild.set("212.*")
     }
 

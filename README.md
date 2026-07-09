@@ -1,4 +1,4 @@
-# IdeaAIPlugin (Claude + ChatGPT + Gemini) — Plugin per IntelliJ IDEA 2021.2.1
+# IdeaAIPlugin (Claude + ChatGPT + Gemini) — Plugin per IntelliJ IDEA 2021.1 / 2021.2
 
 Plugin (Kotlin) che integra **tre** provider AI in IntelliJ IDEA — Claude (Anthropic),
 ChatGPT (OpenAI) e Gemini (Google) — in modo indipendente e simmetrico. Per ciascun
@@ -57,7 +57,12 @@ prefisso comune **IdeaAIPlugin**):
 
 ## Prerequisiti di build
 
-- **JDK 11** (obbligatorio per la piattaforma IntelliJ 212).
+- **JDK 11** (obbligatorio per la piattaforma IntelliJ 211/212).
+
+> Compatibilità: il plugin dichiara `since-build="211"` / `until-build="212.*"`, quindi
+> si installa su IntelliJ IDEA **2021.1** e **2021.2**. La build viene compilata contro la
+> 2021.2.1 (`intellij { version.set("2021.2.1") }`); il supporto alla 2021.1 dipende dal solo
+> `since-build=211` ed è indipendente dalla versione dell'SDK di compilazione.
 - **Gradle** (o il wrapper generato aprendo il progetto in IntelliJ).
 
 Questo repository non include il binario `gradle/wrapper/gradle-wrapper.jar`.
@@ -74,7 +79,7 @@ gradle wrapper --gradle-version 7.6
 ## Build ed esecuzione
 
 ```bash
-./gradlew buildPlugin   # crea build/distributions/claude-idea-plugin-1.1.zip
+./gradlew buildPlugin   # crea build/distributions/claude-idea-plugin-1.2.1.zip
 ./gradlew runIde        # avvia una IntelliJ 2021.2.1 sandbox con il plugin caricato
 ```
 
