@@ -95,16 +95,16 @@ object OpenRouterClient {
         }
 
         if (response.statusCode() != 200) {
-            val message = json.getAsJsonObject("error")?.get("message")?.asString
-                ?: "HTTP ${response.statusCode()}"
-            throw OpenRouterException("Errore dall'API di OpenRouter: $message")
+            throw OpenRouterException(describeError(json, response.statusCode()))
         }
 
         val choices = json.getAsJsonArray("choices")
         if (choices == null || choices.size() == 0) {
-            // OpenRouter può restituire 200 con un errore annidato (es. modello non disponibile).
-            val message = json.getAsJsonObject("error")?.get("message")?.asString
-            if (message != null) throw OpenRouterException("Errore dall'API di OpenRouter: $message")
+            // OpenRouter può restituire 200 con un errore annidato (es. modello non disponibile
+            // o rate-limit del provider upstream).
+            if (json.getAsJsonObject("error") != null) {
+                throw OpenRouterException(describeError(json, response.statusCode()))
+            }
             throw OpenRouterException("Risposta vuota da OpenRouter.")
         }
 
@@ -129,5 +129,39 @@ object OpenRouterClient {
         val inputTokens = usage?.get("prompt_tokens")?.asInt ?: 0
         val outputTokens = usage?.get("completion_tokens")?.asInt ?: 0
         return OpenRouterResult(text, inputTokens, outputTokens)
+    }
+
+    /**
+     * Costruisce un messaggio d'errore leggibile dall'oggetto `error` di OpenRouter.
+     * Il campo `error.message` è spesso generico ("Provider returned error"): il dettaglio
+     * utile è in `error.metadata.raw` (es. la spiegazione del rate-limit del provider upstream).
+     * Il codice 429 riceve una nota dedicata, perché i modelli `:free` hanno un tetto basso
+     * e condiviso tra tutti gli utenti.
+     */
+    private fun describeError(json: JsonObject, statusCode: Int): String {
+        val error = json.getAsJsonObject("error")
+        val message = error?.get("message")?.takeIf { !it.isJsonNull }?.asString
+        val metadata = error?.getAsJsonObject("metadata")
+        val raw = metadata?.get("raw")?.takeIf { !it.isJsonNull }?.asString
+        val code = error?.get("code")?.takeIf { !it.isJsonNull }?.asString
+            ?: statusCode.takeIf { it != 200 }?.toString()
+
+        // Il dettaglio grezzo (raw) è il più informativo; altrimenti ripiega sul message.
+        val detail = when {
+            !raw.isNullOrBlank() && !message.isNullOrBlank() && raw != message -> "$message — $raw"
+            !raw.isNullOrBlank() -> raw
+            !message.isNullOrBlank() -> message
+            else -> "HTTP $statusCode"
+        }
+
+        val is429 = code == "429" || statusCode == 429
+        return if (is429) {
+            "OpenRouter: limite di richieste raggiunto (429). I modelli gratuiti (:free) hanno un " +
+                "tetto basso e condiviso: riprova tra qualche secondo, scegli un altro modello " +
+                "(anche a pagamento economico) o aggiungi una tua provider key su " +
+                "openrouter.ai/settings/integrations. Dettaglio: $detail"
+        } else {
+            "Errore dall'API di OpenRouter: $detail"
+        }
     }
 }
