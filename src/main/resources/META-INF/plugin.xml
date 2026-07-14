@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.andreafini.claudeplugin</id>
     <name>IdeaAIPlugin — Claude, ChatGPT, Gemini, OpenRouter</name>
-    <version>2.1.0</version>
+    <version>2.2.0</version>
     <vendor email="andrea.fini@gmail.com">Andrea Fini</vendor>
 
     <description><![CDATA[
@@ -45,6 +45,13 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <b>2.2.0</b>
+        <ul>
+            <li>Nuovi modelli suggeriti nelle caselle a discesa: <b>Gemini</b> aggiunge
+                <code>gemini-3.5-pro</code> e <code>gemini-3.5-flash</code>; <b>ChatGPT</b> aggiunge
+                <code>gpt-5.8</code>. Le caselle restano editabili, quindi puoi comunque digitare
+                qualsiasi altro id.</li>
+        </ul>
         <b>2.1.0</b>
         <ul>
             <li>Il campo <b>Modello</b> nelle pagine di configurazione di <b>Claude</b>, <b>ChatGPT</b> e

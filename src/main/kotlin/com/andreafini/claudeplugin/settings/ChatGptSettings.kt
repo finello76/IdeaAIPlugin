@@ -96,7 +96,7 @@ class ChatGptSettings : PersistentStateComponent<ChatGptSettings.State> {
         // I modelli con ragionamento (es. gpt-5) consumano token di reasoning che
         // rientrano nel limite: con un budget piccolo la risposta può arrivare vuota.
         const val DEFAULT_MAX_TOKENS = 16000
-        val AVAILABLE_MODELS = listOf("gpt-5", "gpt-5-mini", "gpt-4.1", "gpt-4o")
+        val AVAILABLE_MODELS = listOf("gpt-5.8", "gpt-5", "gpt-5-mini", "gpt-4.1", "gpt-4o")
 
         fun getInstance(): ChatGptSettings =
             ApplicationManager.getApplication().getService(ChatGptSettings::class.java)
