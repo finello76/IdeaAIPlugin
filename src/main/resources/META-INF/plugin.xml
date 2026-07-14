@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.andreafini.claudeplugin</id>
     <name>IdeaAIPlugin — Claude, ChatGPT, Gemini, OpenRouter</name>
-    <version>2.0.1</version>
+    <version>2.1.0</version>
     <vendor email="andrea.fini@gmail.com">Andrea Fini</vendor>
 
     <description><![CDATA[
@@ -25,7 +25,8 @@
         <b>Visibilità</b>: i pulsanti e la tool window di un provider compaiono <b>solo se la relativa API key è
         configurata</b>; i tre provider possono essere attivi contemporaneamente.<br><br>
 
-        <b>Modelli AI supportati</b> (selezionabili nelle impostazioni):
+        <b>Modelli AI supportati</b> (nelle impostazioni il campo modello è una casella a discesa
+        <b>editabile</b>: scegli un suggerimento o digita l'id di un modello non ancora in elenco):
         <ul>
             <li><b>Claude</b>: <code>claude-opus-4-8</code> (default, il più capace), <code>claude-sonnet-5</code>
                 (equilibrato), <code>claude-haiku-4-5</code> (veloce ed economico).</li>
@@ -44,6 +45,14 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <b>2.1.0</b>
+        <ul>
+            <li>Il campo <b>Modello</b> nelle pagine di configurazione di <b>Claude</b>, <b>ChatGPT</b> e
+                <b>Gemini</b> è ora una <b>casella a discesa editabile</b>: puoi scegliere un modello
+                dai suggerimenti oppure <b>digitare</b> l'id di un modello non ancora in elenco
+                (es. un modello appena rilasciato come <code>gemini-3.5-flash</code>), senza dover
+                aggiornare il plugin. Come già avveniva per OpenRouter.</li>
+        </ul>
         <b>2.0.1</b>
         <ul>
             <li>OpenRouter: messaggi d'errore molto più chiari. Ora viene mostrato il dettaglio

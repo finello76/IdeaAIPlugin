@@ -14,7 +14,12 @@ import javax.swing.JPanel
 class ChatGptConfigurable : Configurable {
 
     private val apiKeyField = JBPasswordField()
-    private val modelCombo = ComboBox(ChatGptSettings.AVAILABLE_MODELS.toTypedArray())
+
+    // Editabile: puoi scegliere un modello dall'elenco o digitarne uno nuovo
+    // (es. un modello appena rilasciato non ancora presente nella lista).
+    private val modelCombo = ComboBox(ChatGptSettings.AVAILABLE_MODELS.toTypedArray()).apply {
+        isEditable = true
+    }
     private val maxTokensSpinner = JBIntSpinner(ChatGptSettings.DEFAULT_MAX_TOKENS, 256, 64000, 512)
     private var panel: JPanel? = null
 
@@ -24,6 +29,8 @@ class ChatGptConfigurable : Configurable {
         val builder = FormBuilder.createFormBuilder()
             .addLabeledComponent(JBLabel("API key (OpenAI):"), apiKeyField, 1, false)
             .addLabeledComponent(JBLabel("Modello:"), modelCombo, 1, false)
+            .addComponent(JBLabel("<html>Scegli un modello dall'elenco oppure <b>digita</b> " +
+                "l'id di un modello non ancora presente (es. un modello appena rilasciato).</html>"))
             .addLabeledComponent(JBLabel("Max token risposta:"), maxTokensSpinner, 1, false)
             .addComponent(JBLabel("Limite di token della risposta (non la finestra di contesto). " +
                 "Se le risposte arrivano vuote o troncate, aumentalo: i modelli con ragionamento " +
@@ -42,17 +49,23 @@ class ChatGptConfigurable : Configurable {
         return builtPanel
     }
 
+    private fun selectedModel(): String =
+        (modelCombo.editor.item as? String ?: modelCombo.selectedItem as? String)
+            ?.trim()
+            ?.ifBlank { ChatGptSettings.DEFAULT_MODEL }
+            ?: ChatGptSettings.DEFAULT_MODEL
+
     override fun isModified(): Boolean {
         val settings = ChatGptSettings.getInstance()
         return String(apiKeyField.password) != settings.apiKey ||
-            (modelCombo.selectedItem as? String ?: ChatGptSettings.DEFAULT_MODEL) != settings.model ||
+            selectedModel() != settings.model ||
             maxTokensSpinner.number != settings.maxTokens
     }
 
     override fun apply() {
         val settings = ChatGptSettings.getInstance()
         settings.apiKey = String(apiKeyField.password)
-        settings.model = modelCombo.selectedItem as? String ?: ChatGptSettings.DEFAULT_MODEL
+        settings.model = selectedModel()
         settings.maxTokens = maxTokensSpinner.number
         // Mostra/nasconde subito il pulsante laterale, senza riavviare l'IDE.
         ToolWindowAvailability.refreshAll()
